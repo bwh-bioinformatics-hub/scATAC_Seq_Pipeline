@@ -569,6 +569,5 @@ Files generated when `q TRUE` is used are:
 - Gene Bodies .h5 file: [SampleID]_gene_bodies.h5, e.g. SampleID_gene_bodies.h5  
 - 5kb Window .h5 file: [SampleID]_window_5k.h5, e.g. SampleID_window_5k.h5  
 ```
-[Return to Contents](#contents)
 
 
