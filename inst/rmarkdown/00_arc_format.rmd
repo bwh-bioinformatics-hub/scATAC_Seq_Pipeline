@@ -35,7 +35,7 @@ stm("Starting arc metrics formatting")
 #### Argument parsing
 ```{r Parse arguments}
 if(is.null(params$in_tenx)) {
-  in_tenx <- system.file("testdata/outs", package = "scATAC_Seq_Pipeline")
+  in_tenx <- system.file("testdata/outs", package = "scATACSeqPipeline")
 } else {
   in_tenx <- params$in_tenx
   out_dir <- params$out_dir
