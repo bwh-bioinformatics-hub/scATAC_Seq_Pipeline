@@ -63,7 +63,7 @@ if(!dir.exists(args$out_dir)) {
 
 rmd_loc <- file.path(args$out_dir, "assemble_atac_outputs.Rmd")
 
-file.copy(system.file("rmarkdown/assemble_atac_outputs.Rmd", package = "scATAC_Seq_Pipeline"),
+file.copy(system.file("rmarkdown/assemble_atac_outputs.Rmd", package = "scATACSeqPipeline"),
           rmd_loc,
           overwrite = TRUE)
 
