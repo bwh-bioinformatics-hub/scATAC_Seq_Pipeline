@@ -250,7 +250,7 @@ meta$barcode_category[meta$filtered & meta$pass_fail == "pass"] <- "pass_singlet
 qc_list <- list(report_type = "atac_qc",
                 report_datetime = as.character(start_time_atac),
                 report_uuid = ids::uuid(use_time = TRUE),
-                package = "scATAC_Seq_Pipeline ",
+                package = "scATACSeqPipeline ",
                 batch_id = sub("_.+","",sample_names[1]))
 
 out_json <- paste0(out_prefix, "atac_qc_metrics.json")
