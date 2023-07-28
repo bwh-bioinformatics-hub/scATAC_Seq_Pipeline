@@ -484,7 +484,7 @@ There are 8 parameters for postprocessing:
 ```
 
 An example is:
-```
+
 bash ${baseDir}/scripts/05_crossplatform_postprocessing.sh \
   -b /shared/apps/bedtools2/bin/bedtools \
   -i ${baseDir}/results/SampleID/atac_qc/SampleID_filtered_fragments.tsv.gz \
@@ -494,12 +494,8 @@ bash ${baseDir}/scripts/05_crossplatform_postprocessing.sh \
   -o SampleID/postprocessed \
   -t atac_postprocessing_temp \
   -s SampleID
+
 ```
-
-[Return to Contents](#contents)
-
-<a id="postpro_out"></a>
-
 ### Output files
 
 For outputs, files are prefixed with the Well or Sample ID provided as the `-w` parameter.
@@ -517,7 +513,6 @@ For outputs, files are prefixed with the Well or Sample ID provided as the `-w` 
 
 After postprocessing, the resulting files can be assembled into a set of output files for storage and downstream analysis.
 
-<a id="out_param"></a>
 
 ### Parameters
 
