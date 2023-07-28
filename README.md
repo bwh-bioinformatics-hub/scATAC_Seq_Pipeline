@@ -545,7 +545,7 @@ Rscript --vanilla \
 ```
 
 An example run:
-```
+
 Rscript --vanilla \
   tenx-atacseq-pipeline/06_run_assemble_atac_outputs.R \
   -p SampleID/postprocessed \
@@ -554,7 +554,7 @@ Rscript --vanilla \
   -g hg38 \
   -d SampleID/atac_out/ \
   -o SampleID/atac_out/SampleID_out_report.html
-```
+
 ```
 Output files will be assigned the same prefix used for the postprocessing step, above (auto-detected from filenames).
 
