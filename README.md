@@ -555,9 +555,6 @@ Rscript --vanilla \
   -d SampleID/atac_out/ \
   -o SampleID/atac_out/SampleID_out_report.html
 ```
-
-
-### Output files
 ```
 Output files will be assigned the same prefix used for the postprocessing step, above (auto-detected from filenames).
 
