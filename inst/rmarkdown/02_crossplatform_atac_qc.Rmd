@@ -67,7 +67,7 @@ start_time <- Sys.time()
 quiet_library <- function(...) {
   suppressPackageStartupMessages(library(...))
 }
-quiet_library(scATAC_Seq_Pipeline)
+quiet_library(scATACSeqPipeline)
 quiet_library(H5MANIPULATOR)
 quiet_library(Matrix)
 quiet_library(S4Vectors)
@@ -86,10 +86,10 @@ stm("Starting scATAC-seq QC")
 #### Argument parsing
 ```{r Parse arguments}
 if(is.null(params$in_pre)) {
-  in_pre <- system.file("testdata/preprocessed", package = "scATAC_Seq_Pipeline")
-  in_tenx <- system.file("testdata/outs", package = "scATAC_Seq_Pipeline")
-  in_sum <- system.file("testdata/outs", package = "scATAC_Seq_Pipeline")
-  in_key <- system.file("testdata/test_SampleSheet.csv", package = "scATAC_Seq_Pipeline")
+  in_pre <- system.file("testdata/preprocessed", package = "scATACSeqPipeline")
+  in_tenx <- system.file("testdata/outs", package = "scATACSeqPipeline")
+  in_sum <- system.file("testdata/outs", package = "scATACSeqPipeline")
+  in_key <- system.file("testdata/test_SampleSheet.csv", package = "scATACSeqPipeline")
   genome <- "hg38"
   qc_only <- FALSE
   refs <- "all"
@@ -246,7 +246,7 @@ in_prefix <- file.path(in_pre, in_sample)
 
 #### Check reference overlap files
 ```{r}
-reference_files <- list.files(system.file("reference", package = "scATAC_Seq_Pipeline"), 
+reference_files <- list.files(system.file("reference", package = "scATACSeqPipeline"), 
                               pattern = paste0(genome, ".+gr.rds"),
                               full.names = TRUE)
 reference_names <- sub(paste0(".+",genome,"_"),"",reference_files)
@@ -826,8 +826,8 @@ if(!qc_only) {
 qc_list <- list(report_type = "atac_qc",
                 report_datetime = as.character(start_time),
                 report_uuid = ids::uuid(use_time = TRUE),
-                package = "scATAC_Seq_Pipeline",
-                package_version = sessionInfo()$otherPkgs$scATAC_Seq_Pipeline$Version,
+                package = "scATACSeqPipeline",
+                package_version = sessionInfo()$otherPkgs$scATACSeqPipeline$Version,
                 sample_id = in_sample
                 )
 
@@ -1124,7 +1124,7 @@ if(pipeline_type %in% c("arc_v1", "atac_v1", "atac_v2")) {
 ```{r}
 if(pipeline_type %in% c("arc_v1", "atac_v1", "atac_v2")) {
   reference_projections <- fread(system.file("reference/saturation/reference_projections.csv",
-                                             package = "scATAC_Seq_Pipeline"))
+                                             package = "scATACSeqPipeline"))
   reference_projections$dataset <- paste0("ref_",reference_projections$dataset)
   
   umi_saturation_plot <- ggplot() +
