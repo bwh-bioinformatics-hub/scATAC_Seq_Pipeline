@@ -1,0 +1,607 @@
+---
+title: "10x Genomics scATAC-seq QC"
+
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  html_document:
+    code_folding: hide
+    df_print: paged
+    self_contained: true
+params:
+  in_post: NULL
+  in_frag: NULL
+  in_meta: NULL
+  genome: NULL
+  refs: "all"
+  window_sizes: "all"
+  n_cores: "auto"
+  out_dir: NULL
+---
+
+<a id="contents"></a>
+
+## Contents
+
+#### [Data Processing](#data_processing)
+- [Session Preparation](#session_preparation)
+- [Load References](#load_refs)
+- [Read Metadata](#assemble_meta)
+- [ArchR QC Analysis](#archr)
+- [Output metadata](#meta_out)
+- [Generate Matrices](#mats)
+
+[Write QC JSON](#json_out)
+
+#### [Session Info](#session_info)
+
+<a id="data_processing"></a>
+
+## Data Processing
+
+<a id="session_preparation"></a>
+
+### Session Preparation
+
+#### Load libraries:
+```{r Load Libraries}
+start_time <- Sys.time()
+
+quiet_library <- function(...) {
+  suppressPackageStartupMessages(library(...))
+}
+quiet_library(scATAC_Seq_Pipeline)
+quiet_library(H5MANIPULATOR)
+quiet_library(Matrix)
+quiet_library(S4Vectors)
+quiet_library(ggplot2)
+quiet_library(cowplot)
+quiet_library(jsonlite)
+quiet_library(purrr)
+options(stringsAsFactors = FALSE)
+```
+
+Declaring start
+```{r Declare start}
+stm("Starting scATAC-seq assembly")
+```
+
+#### Argument parsing
+```{r Parse arguments}
+if(is.null(params$in_post)) {
+  in_post <- system.file("testdata/postprocessed", package = "scATAC_Seq_Pipeline")
+  in_frag <- system.file("testdata/outs/fragments.tsv.gz", package = "scATAC_Seq_Pipeline")
+  in_meta <- system.file("testdata/batch_qc/X055_X055-AP0C1W1_filtered_metadata.csv.gz", package = "scATAC_Seq_Pipeline")
+  genome <- "hg38"
+  refs <- "all"
+  window_sizes <- "all"
+  out_dir <- tempdir()
+} else {
+  in_post <- params$in_post
+  in_frag <- params$in_frag
+  in_meta <- params$in_meta
+  genome <- params$genome
+  refs <- params$refs
+  window_sizes <- params$window_sizes
+  n_cores <- params$n_cores
+  out_dir <- params$out_dir
+}
+
+# Check Genome
+if(!genome %in% c("hg38","hg19")) {
+  stm(paste0("Genome must be 'hg38' or 'hg19'. Genome provided: ", genome))
+  stop()
+}
+
+if(is.null(refs)) {
+  refs <- "all"
+}
+
+if(is.null(window_sizes)) {
+  window_sizes <- "all"
+}
+
+stm(paste0("IN  postprocessed dir          : ", in_post))
+stm(paste0("IN  filtered_fragments.tsv.gz : ", in_frag))
+stm(paste0("IN  filtered_metadata.csv.gz  : ", in_meta))
+stm(paste0("IN  Genome                    : ", genome))
+stm(paste0("IN  References                : ", refs))
+stm(paste0("IN  Window Sizes              : ", window_sizes))
+stm(paste0("OUT Directory                 : ", out_dir))
+```
+
+#### Input Parameters
+```{r Print Arguments}
+print(c(
+  paste0("IN  postprocessed dir          : ", in_post),
+  paste0("IN  filtered_fragments.tsv.gz : ", in_frag),
+  paste0("IN  filtered_metadata.csv.gz  : ", in_meta),
+  paste0("IN  Genome                    : ", genome),
+  paste0("IN  References                : ", refs),
+  paste0("IN  Window Sizes              : ", window_sizes),
+  paste0("OUT Directory                 : ", out_dir)
+))
+```
+
+#### Set ArchR parameters
+```{r setup archr}
+quiet_library(ArchR)
+
+stm("Setting ArchR parameters")
+set.seed(3030)
+if(n_cores == "auto") {
+  available_cores <- parallel::detectCores()
+} else {
+  available_cores <- as.numeric(n_cores)
+}
+stm(paste0("Using ",available_cores, " threads"))
+addArchRThreads(available_cores, force = TRUE)
+addArchRGenome(genome)
+```
+
+#### Check Input Files
+```{r Check Inputs}
+if(!dir.exists(in_post)) {
+  stm(paste0("ERROR: Cannot find IN postprocessed dir:", in_post))
+  stop()
+}
+if(!file.exists(in_frag)) {
+  stm(paste0("ERROR: Cannot find IN filtered_fragments.tsv.gz:", in_frag))
+  stop()
+} 
+if(!file.exists(in_meta)) {
+  stm(paste0("ERROR: Cannot find IN filtered_metadata.csv.gz:", in_meta))
+  stop()
+}
+
+in_sample <- sub("_fragments.tsv.gz", "", basename(in_frag))
+in_sample <- sub("_filtered", "", in_sample)
+in_prefix <- in_post
+
+stm(paste0("Using Sample Name:", in_sample))
+
+out_prefix <- file.path(out_dir, paste0(in_sample, "_"))
+
+stm(paste0("Using Output Prefix:", out_prefix))
+```
+
+#### Check reference overlap files
+```{r}
+reference_files <- list.files(system.file("reference", package = "scATAC_Seq_Pipeline"), 
+                              pattern = paste0(genome, ".+gr.rds"),
+                              full.names = TRUE)
+reference_names <- sub(paste0(".+",genome,"_"),"",reference_files)
+reference_names <- sub("_gr.rds","",reference_names)
+
+stm(paste(c("Available references:", reference_names), collapse = " "))
+
+reference_patterns <- paste0("_",reference_names,"_")
+names(reference_patterns) <- reference_names
+
+match_ref <- function(patterns, targets) {
+  res <- targets[0]
+  for(i in seq_along(patterns)) {
+    pat <- patterns[i]
+    matches <- grepl(pat, targets)
+    if(sum(matches) > 0) {
+      res <- c(res, targets[matches][1])
+      names(res)[length(res)] <- names(patterns)[i]
+    }
+  }
+  res
+}
+
+feature_mat_files <- list.files(in_post, pattern = ".+sparse_matrix.tsv.gz", full.names = TRUE)
+feature_mat_files <- match_ref(reference_patterns, feature_mat_files)
+feature_mat_names <- names(feature_mat_files)
+
+matching_refs <- feature_mat_names
+
+stm(paste(c("postprocessed reference data:", matching_refs), collapse = " "))
+
+if(length(matching_refs) == 0) {
+  stop("postprocessed reference datasets do not match available references")
+}
+
+if(refs == "all") {
+  stm("Using all matching references")
+} else {
+  split_refs <- unlist(strsplit(refs, split = ","))
+  
+  # Check for matching references
+  good_refs <- intersect(split_refs, reference_names)
+  
+  # Stop if no matches
+  if(length(good_refs) == 0) {
+    stop(paste("No references match", refs))
+  }
+  
+  combined_good_refs <- paste(good_refs, collapse = " ")
+  stm(paste0("Selected references: ", combined_good_refs))
+  
+  reference_files <- reference_files[match(good_refs, reference_names)]
+  reference_names <- good_refs
+  
+  feature_mat_files <- feature_mat_files[match(good_refs, feature_mat_names)]
+  feature_mat_names <- good_refs
+  
+  # Warn about mismatches
+  bad_refs <- setdiff(split_refs, reference_names)
+  if(length(bad_refs) > 0) {
+    bad_refs <- paste(bad_refs, collapse = ",")
+    stm(paste0("WARNING: Reference input(s) ",bad_refs," do not match available references. Skipping."))
+  }
+}
+```
+
+#### Check window sizes
+```{r}
+window_mat_files <- list.files(in_post, pattern = paste0(in_sample,".+window.+counts.tsv.gz"), full.names = TRUE)
+window_mat_names <- sub(paste0(in_sample,"_(.+)_counts.tsv.gz"),"\\1",basename(window_mat_files))
+#window_mat_names <- sub("[^_]+_", "", window_mat_names)
+stm(paste(c("Available window matrices:", window_mat_names), collapse = " "))
+
+if(window_sizes[1] == "all") {
+  stm("Using all Available window matrices")
+  use_windows <- window_mat_names
+} else {
+  split_windows <- unlist(strsplit(window_sizes, split = ","))
+  
+  # Check for matching references
+  good_windows <- intersect(split_windows, window_mat_names)
+  
+  # Stop if no matches
+  if(length(good_windows) == 0) {
+    stop(paste("No window matrices match", window_sizes))
+  }
+  
+  combined_good_windows <- paste(good_windows, collapse = " ")
+  stm(paste0("Selected window matrices: ", good_windows))
+  
+  window_mat_names <- good_windows
+  window_mat_files <- window_mat_files[match(good_windows, window_mat_names)]
+  
+  # Warn about mismatches
+  bad_windows <- setdiff(split_windows, window_mat_names)
+  if(length(bad_windows) > 0) {
+    bad_windows <- paste(bad_windows, collapse = ",")
+    stm(paste0("WARNING: Window input(s) ",bad_windows," do not match available matrices. Skipping."))
+  }
+}
+```
+
+#### Create out directory if missing
+```{r Create Out Dir}
+if(!dir.exists(out_dir)) {
+  stm(paste0("Creating Output Directory: ",out_dir))
+  dir.create(out_dir, 
+             recursive = TRUE)
+}
+```
+
+[Return to Contents](#contents)
+
+<a id="load_refs"></a>
+
+#### Load Reference Datasets
+```{r Load references}
+stm(paste("Loading reference region sets for", genome))
+
+reference_datasets <- map(reference_files,
+                          readRDS)
+
+gr_to_df <- function(gr) {
+  df <- data.frame(seqnames = seqnames(gr),
+                   start = start(gr),
+                   end = end(gr),
+                   strand = strand(gr))
+  
+  mc <- as.data.frame(mcols(gr)@listData)
+  
+  if(nrow(mc) == nrow(df)) {
+    cbind(df, mc)
+  } else {
+    df
+  }
+  
+}
+
+reference_datasets <- map(reference_datasets, gr_to_df)
+
+names(reference_datasets) <- reference_names
+
+reference_meta <- map(seq_along(reference_datasets),
+                      function(x) {
+                        dt <- reference_datasets[[x]]
+                        reference_name = reference_names[x]
+                        meta <- data.frame(name = paste0(dt$seqnames, "_", dt$start, "_", dt$end),
+                                           id = paste0(genome, "_", reference_name, "_", 1:nrow(dt)))
+                        if(ncol(dt) > 5) {
+                          meta <- cbind(meta, dt[6:ncol(dt)])
+                        }
+                        
+                        as.list(meta)
+                      })
+
+names(reference_meta) <- reference_names
+```
+
+[Return to Contents](#contents)
+
+<a id="assemble_meta"></a>
+
+### Load Metadata
+
+```{r}
+stm(paste0("Reading metadata from ", in_meta))
+
+filtered_meta <- read.csv(in_meta)
+```
+
+[Return to Contents](#contents)
+
+<a id="archr"></a>
+
+### ArchR QC analysis
+
+#### Create Arrow file
+```{r}
+stm(paste0("ArchR: Building ArrowFile from ",in_frag))
+valid_barcodes <- list(bcs = filtered_meta$barcodes)
+names(valid_barcodes) <- in_sample
+valid_barcodes <- SimpleList(valid_barcodes)
+
+ArrowFile <- createArrowFiles(inputFiles = in_frag,
+                              sampleNames = in_sample,
+                              validBarcodes = valid_barcodes,
+                              filterFrags = 500,
+                              filterTSS = 0,
+                              maxFrags = 1e6,
+                              force = TRUE)
+
+stm(paste0("ArchR: ArrowFile generated at ", ArrowFile))
+
+```
+
+#### Assemble ArchRProject
+```{r}
+proj <- ArchRProject(ArrowFiles = ArrowFile,
+                     copyArrows = TRUE)
+
+archr_meta <- getCellColData(proj)
+archr_meta <- as.data.frame(archr_meta)
+
+proj_ArrowFile <- getArrowFiles(proj)
+stm(paste0("ArchR: Project ArrowFile located at ", proj_ArrowFile))
+```
+
+
+```{r}
+# Store unfiltered names for later
+archr_names <- getCellNames(proj)
+archr_barcodes <- sub(".+#","",archr_names)
+
+# Get counts for reporting
+n_total <- nrow(filtered_meta)
+
+stm(paste0("ArchR: Total barcodes = ", n_total))
+
+n_singlets <- sum(filtered_meta$singlet)
+
+stm(paste0("ArchR: Singlet barcodes = ", n_singlets))
+
+n_doublets <-  n_total - n_singlets
+stm(paste0("ArchR: Doublet barcodes = ", n_doublets))
+
+# Match order to archr file
+rownames(filtered_meta) <- filtered_meta$barcodes
+filtered_meta <- filtered_meta[archr_barcodes,]
+```
+
+#### Save Archr project and shift arrow to output directory
+```{r}
+ArrowFile <- getArrowFiles(proj)
+
+out_arrow <- paste0(out_prefix, "archr.arrow")
+
+stm(paste0("Saving .arrow to ", out_arrow))
+file.copy(ArrowFile, out_arrow)
+```
+
+Resolve metadata discrepancies
+```{r}
+stm("Resolving metadata discrepencies")
+proj_meta <- getCellColData(proj)
+h5_ls <- h5ls(out_arrow)
+
+h5_MetaNames <- h5_ls[h5_ls$group == "/Metadata",]
+
+# Add missing metadata
+additional_meta <- setdiff(names(filtered_meta), h5_MetaNames$name)
+if(length(additional_meta) > 0) {
+  for(meta_col in additional_meta) {
+    h5write(filtered_meta[[meta_col]],
+            out_arrow,
+            paste0("/Metadata/",meta_col))
+  }
+}
+```
+
+#### Clean up ArchR in memory
+```{r}
+rm(proj)
+```
+
+
+[Return to Contents](#contents)
+
+<a id="write_meta"></a>
+
+#### Write unfiltered and filtered metadata
+```{r}
+filtered_meta_out <- paste0(out_prefix, "filtered_metadata.csv.gz")
+stm(paste("Writing filtered metadata to", filtered_meta_out))
+fwrite(filtered_meta, filtered_meta_out)
+```
+
+[Return to Contents](#contents)
+
+<a id="mats"></a>
+
+## Build Feature Matrices
+
+#### Read overlaps and output results
+```{r Region Matrices}
+stm("Building reference matrices")
+
+obs_list <- as.list(filtered_meta[,names(filtered_meta) != "barcodes"])
+
+walk(seq_along(feature_mat_files),
+     function(x) {
+       mat_file <- feature_mat_files[x]
+       mat_name <- feature_mat_names[x]
+       
+       n_features <- nrow(reference_datasets[[mat_name]])
+       
+       stm(paste("Building",mat_name,"matrix"))
+       
+       dt <- fread(mat_file,
+                   header = FALSE,
+                   col.names = c("barcodes",
+                                 "i",
+                                 "x"),
+                   colClasses = list("character" = 1,
+                                     "integer" = c(2,3)))
+       
+       dt <- dt[barcodes %in% filtered_meta$barcodes]
+       barcode_counts <- table(dt$barcodes)
+       new_barcodes <- filtered_meta$barcodes[match(names(barcode_counts), filtered_meta$barcodes)]
+       
+       mat_list <- list(matrix = list(barcodes = new_barcodes,
+                                      data = dt$x,
+                                      indices = dt$i - 1,
+                                      indptr = c(0, cumsum(barcode_counts)),
+                                      shape = c(n_features, nrow(filtered_meta)),
+                                      features = reference_meta[[mat_name]],
+                                      observations = obs_list))
+       rm(dt)
+       
+       out_file <- paste0(out_prefix, mat_name, ".h5")
+       stm(paste("Writing .h5 file to:", out_file))
+       write_h5_list(mat_list,
+                     out_file,
+                     overwrite = TRUE)
+       
+       rm(mat_list)
+     })
+```
+
+[Return to Contents](#contents)
+
+### Window count matrices
+```{r}
+stm("Building window matrices")
+window_sizes <- as.numeric(sub("window_([0-9]+)k","\\1",window_mat_names)) * 1000
+
+window_offsets <- map(window_sizes,
+                      function(size) {
+                        read_chrom_sizes(genome = genome,
+                                         window_size = size)
+                      })
+names(window_offsets) <- window_mat_names
+
+window_metas <- map(seq_along(window_offsets),
+                    function(x) {
+                      offsets <- window_offsets[[x]]
+                      window_mat_name <- window_mat_names[x]
+                      window_size <- window_sizes[x]
+                      
+                      region_bed <- window_index_to_bed(1:sum(offsets$n_windows),
+                                                        offsets,
+                                                        window_size = window_size)
+                      region_bed$start <- as.character(format(region_bed$start, scientific = FALSE))
+                      region_bed$end <- as.character(format(region_bed$end, scientific = FALSE))
+                      list(name = gsub(" +","",paste(region_bed$chr, region_bed$start, region_bed$end, sep = "_")),
+                           id = paste0(genome, "_", window_mat_name, "_", 1:nrow(region_bed)))
+                      
+                    })
+names(window_metas) <- window_mat_names
+```
+
+#### Generate window matrices
+```{r Window Matrices}
+walk(seq_along(window_mat_files),
+     function(x) {
+       window_mat_file <- window_mat_files[x]
+       window_mat_name <- window_mat_names[x]
+       window_size <- window_sizes[x]
+       
+       window_offsets <- window_offsets[[window_mat_name]]
+       window_meta <- window_metas[[window_mat_name]]
+       
+       stm(paste("Building",window_mat_name,"matrix"))
+       
+       dt <- fread(window_mat_file,
+                   header = FALSE,
+                   col.names = c("barcodes",
+                                 "chr",
+                                 "chr_i",
+                                 "x"),
+                   colClasses = list("character" = c(1,2),
+                                     "integer" = c(3,4)))
+       
+       dt <- dt[barcodes %in% filtered_meta$barcodes]
+       offsets <- window_offsets[,c("chr","offset")]
+       
+       dt <- dt[offsets, on = "chr"]
+       dt$i <- dt$chr_i + dt$offset
+       dt <- dt[!is.na(barcodes)]
+       dt <- setorder(dt, barcodes, i)
+       
+       barcode_counts <- table(dt$barcodes)
+       new_barcodes <- filtered_meta$barcodes[match(names(barcode_counts), filtered_meta$barcodes)]
+       
+       window_list <- list(matrix = list(barcodes = new_barcodes,
+                                         data = dt$x,
+                                         indices = dt$i - 1,
+                                         indptr = c(0, cumsum(barcode_counts)),
+                                         shape = c(sum(window_offsets$n_windows),
+                                                   nrow(filtered_meta)),
+                                         features = window_meta,
+                                         observations = obs_list))
+       rm(dt)
+       
+       window_list$matrix$observations <- as.list(filtered_meta)
+       
+       out_file <- paste0(out_prefix, window_mat_name, ".h5")
+       stm(paste("Writing .h5 file to:", out_file))
+       write_h5_list(window_list,
+                     out_file,
+                     overwrite = TRUE)
+       
+       rm(window_list)
+     })
+```
+
+[Return to Contents](#contents)
+
+<a id="session_info"></a>
+
+## Session Information
+
+```{r Session Info}
+sessionInfo()
+```
+
+Total time elapsed
+```{r Show Time}
+end_time <- Sys.time()
+diff_time <- end_time - start_time
+time_message <- paste0("Elapsed Time: ", 
+                       round(diff_time, 3),
+                       " ", units(diff_time))
+print(time_message)
+stm(time_message)
+stm("10x ATAC assembly process complete.")
+```
+
+[Return to Contents](#contents)

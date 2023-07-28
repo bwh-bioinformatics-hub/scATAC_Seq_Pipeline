@@ -1,0 +1,33 @@
+Package: scATAC_Seq_Pipeline
+Title: QC and Analysis of scATAC-seq data
+Version: 1.1.0
+Authors@R: 
+    person(given = "Anthony",
+           family = "Cicalo",
+           role = c("aut", "cre"),
+           email = "acicalo@bwh.harvard.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Functions and Rmarkdown files for QC and analysis of scATAC-seq datasets.
+License: NA
+Encoding: UTF-8
+Depends:
+  R (>= 3.5.0),
+  GenomicRanges,
+  data.table,
+  Matrix,
+  rhdf5
+Imports:
+  assertthat,
+  H5MANIPULATOR (>= 1.0.20),
+  igraph,
+  IRanges,
+  Matrix,
+  parallel,
+  preseqR,
+  purrr,
+  RANN
+Suggests: 
+    testthat,
+    ArchR,
+    tidygraph
+RoxygenNote: 7.2.3

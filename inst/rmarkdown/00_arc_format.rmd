@@ -1,0 +1,181 @@
+---
+title: "10x Genomics cellranger-arc formatting"
+author: 
+ - BWH Bioinformatics & Genomics Hub
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  html_document:
+    code_folding: hide
+    df_print: paged
+    self_contained: true
+params:
+  in_tenx: NULL
+  out_dir: NULL
+---
+
+### Session Preparation
+
+#### Load libraries:
+```{r Load Libraries}
+start_time <- Sys.time()
+
+quiet_library <- function(...) {
+  suppressPackageStartupMessages(library(...))
+}
+
+library(data.table)
+library(H5MANIPULATOR)
+```
+
+Declaring start
+```{r Declare start}
+stm("Starting arc metrics formatting")
+```
+
+#### Argument parsing
+```{r Parse arguments}
+if(is.null(params$in_tenx)) {
+  in_tenx <- system.file("testdata/outs", package = "scATAC_Seq_Pipeline")
+} else {
+  in_tenx <- params$in_tenx
+  out_dir <- params$out_dir
+}
+
+stm(paste0("IN  cellranger-arc outputs: ", in_tenx))
+```
+
+#### Check input files
+```{r}
+pbm_file <- file.path(in_tenx, "per_barcode_metrics.csv")
+
+if(file.exists(pbm_file)) {
+  stm(paste("Found per_barcode_metrics.csv file:", pbm_file))
+} else {
+  stm(paste("ERROR: Could not find per_barcode_metrics.csv file in", in_tenx))
+  stop()
+}
+
+sum_file <- file.path(in_tenx, "summary.csv")
+
+if(file.exists(sum_file)) {
+  stm(paste("Found summary.csv file:", sum_file))
+} else {
+  stm(paste("ERROR: Could not find summary.csv file in", in_tenx))
+  stop()
+}
+```
+
+### Barcode metrics
+
+Read per_barcode_metrics
+```{r}
+stm("Reading per_barcode_metrics.csv")
+
+pbm <- fread(pbm_file)
+```
+
+Adding cell UUIDs (barcodes)
+```{r}
+stm("Adding Cell UUIDs")
+
+pbm$cell_uuid <- ids::uuid(nrow(pbm),
+                           drop_hyphens = TRUE, 
+                           use_time = TRUE)
+```
+
+Select columns to retain
+```{r}
+old_cols <- c("barcode", 
+              "atac_raw_reads", 
+              "atac_dup_reads", 
+              "atac_chimeric_reads",
+              "atac_unmapped_reads", 
+              "atac_lowmapq", 
+              "atac_mitochondrial_reads",
+              "atac_fragments",
+              "cell_uuid",
+              "is_cell", 
+              "atac_TSS_fragments",
+              "atac_peak_region_fragments",
+              "atac_peak_region_cutsites")
+
+new_cols <- c("barcode",
+             "total",
+             "duplicate",
+             "chimeric",
+             "unmapped",
+             "lowmapq",
+             "mitochondrial",
+             "passed_filters",
+             "cell_id",
+             "is__cell_barcode",
+             "TSS_fragments",
+             "peak_region_fragments",
+             "peak_region_cutsites")
+```
+
+Apply to data
+```{r}
+stm("Filtering and renaming columns")
+
+pbm <- as.data.frame(pbm)[old_cols]
+names(pbm) <- new_cols
+```
+
+Write modified metrics
+```{r}
+out_pbm <- file.path(out_dir,"arc_singlecell.csv")
+stm(paste("Writing singlecell.csv to", out_pbm))
+
+fwrite(pbm, out_pbm)
+```
+
+### Summary files
+
+```{r}
+stm("Reading summary.csv")
+
+arc_summary <- read.csv(sum_file)
+```
+
+ATAC summary
+```{r}
+atac_summary <- arc_summary
+
+atac_summary$num_fragments <- sum(pbm$total)
+atac_summary$total_usable_fragments <- sum(pbm$passed_filters)
+atac_summary$frac_waste_mitochondrial <- sum(pbm$mitochondrial)/sum(pbm$total)
+```
+
+```{r}
+out_atac_summary <- file.path(out_dir, "atac_summary.csv")
+stm(paste("Writing atac_summary.csv to", out_atac_summary))
+
+fwrite(atac_summary, out_atac_summary)
+```
+
+RNA summary
+```{r}
+rna_summary <- arc_summary
+
+rna_summary <- rna_summary[,!grepl("^ATAC", names(rna_summary))]
+rna_summary <- rna_summary[,!grepl("^Linked", names(rna_summary))]
+```
+
+```{r}
+out_rna_summary <- file.path(in_tenx, "rna_summary.csv")
+stm(paste("Writing rna_summary.csv to", out_rna_summary))
+
+fwrite(rna_summary, out_rna_summary)
+```
+
+
+## Session Information
+
+```{r Session Info}
+sessionInfo()
+```
+
+```{r}
+stm("10x arc metrics formatting complete.")
+```
