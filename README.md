@@ -417,8 +417,6 @@ Rscript --vanilla \
 
 <a id="filter"></a>
 
-##Filter fragments.tsv.gz
-
 After QC, we can filter the fragments.tsv.gz file to retain only cell barcodes that pass QC criteria. This reduces the amount of data that goes forward into postprocessing and output.
 
 <a id="filter_param"></a>
