@@ -49,7 +49,7 @@ start_time <- Sys.time()
 quiet_library <- function(...) {
   suppressPackageStartupMessages(library(...))
 }
-quiet_library(scATAC_Seq_Pipeline)
+quiet_library(scATACSeqPipeline)
 quiet_library(H5MANIPULATOR)
 quiet_library(Matrix)
 quiet_library(S4Vectors)
@@ -68,9 +68,9 @@ stm("Starting scATAC-seq assembly")
 #### Argument parsing
 ```{r Parse arguments}
 if(is.null(params$in_post)) {
-  in_post <- system.file("testdata/postprocessed", package = "scATAC_Seq_Pipeline")
-  in_frag <- system.file("testdata/outs/fragments.tsv.gz", package = "scATAC_Seq_Pipeline")
-  in_meta <- system.file("testdata/batch_qc/X055_X055-AP0C1W1_filtered_metadata.csv.gz", package = "scATAC_Seq_Pipeline")
+  in_post <- system.file("testdata/postprocessed", package = "scATACSeqPipeline")
+  in_frag <- system.file("testdata/outs/fragments.tsv.gz", package = "scATACSeqPipeline")
+  in_meta <- system.file("testdata/batch_qc/X055_X055-AP0C1W1_filtered_metadata.csv.gz", package = "scATACSeqPipeline")
   genome <- "hg38"
   refs <- "all"
   window_sizes <- "all"
@@ -166,7 +166,7 @@ stm(paste0("Using Output Prefix:", out_prefix))
 
 #### Check reference overlap files
 ```{r}
-reference_files <- list.files(system.file("reference", package = "scATAC_Seq_Pipeline"), 
+reference_files <- list.files(system.file("reference", package = "scATACSeqPipeline"), 
                               pattern = paste0(genome, ".+gr.rds"),
                               full.names = TRUE)
 reference_names <- sub(paste0(".+",genome,"_"),"",reference_files)
