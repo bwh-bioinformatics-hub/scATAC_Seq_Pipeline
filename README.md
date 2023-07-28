@@ -561,7 +561,7 @@ Rscript --vanilla \
 ### Output files
 
 Output files will be assigned the same prefix used for the postprocessing step, above (auto-detected from filenames).
-
+```
 Files generated when `q TRUE` is used are:
 - QC filtered barcode metadata: [SampleID]_filtered_metadata.csv.gz, e.g. SampleID_filtered_metadata.csv.gz  
 - Saturation projection: [SampleID]_saturation_projection.csv.gz, e.g. SampleID_saturation_projection.csv.gz  
@@ -571,7 +571,7 @@ Files generated when `q TRUE` is used are:
 - Gene TSS .h5 file: [SampleID]_tss.h5, e.g. SampleID_tss.h5  
 - Gene Bodies .h5 file: [SampleID]_gene_bodies.h5, e.g. SampleID_gene_bodies.h5  
 - 5kb Window .h5 file: [SampleID]_window_5k.h5, e.g. SampleID_window_5k.h5  
-
+```
 [Return to Contents](#contents)
 
 
