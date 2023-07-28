@@ -481,10 +481,9 @@ There are 8 parameters for postprocessing:
 * `-t` Temporary Directory
 * `-s` SampleID
 
-```
-
 An example is:
 
+```
 bash ${baseDir}/scripts/05_crossplatform_postprocessing.sh \
   -b /shared/apps/bedtools2/bin/bedtools \
   -i ${baseDir}/results/SampleID/atac_qc/SampleID_filtered_fragments.tsv.gz \
