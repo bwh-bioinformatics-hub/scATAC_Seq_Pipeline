@@ -1,4 +1,4 @@
-Package: scATAC_Seq_Pipeline
+Package: scATACSeqPipeline
 Title: QC and Analysis of scATAC-seq data
 Version: 1.1.0
 Authors@R: 
