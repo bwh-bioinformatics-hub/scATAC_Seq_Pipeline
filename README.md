@@ -559,9 +559,9 @@ Rscript --vanilla \
 <a id="out_out"></a>
 
 ### Output files
-
-Output files will be assigned the same prefix used for the postprocessing step, above (auto-detected from filenames).
 ```
+Output files will be assigned the same prefix used for the postprocessing step, above (auto-detected from filenames).
+
 Files generated when `q TRUE` is used are:
 - QC filtered barcode metadata: [SampleID]_filtered_metadata.csv.gz, e.g. SampleID_filtered_metadata.csv.gz  
 - Saturation projection: [SampleID]_saturation_projection.csv.gz, e.g. SampleID_saturation_projection.csv.gz  
