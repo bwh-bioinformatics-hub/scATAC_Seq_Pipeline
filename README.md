@@ -542,9 +542,10 @@ Rscript --vanilla \
   -g hg38 \
   -d atac_out/ \
   -o atac_out/SampleID_qc_report.html
-```
+
 
 An example run:
+```
 
 Rscript --vanilla \
   tenx-atacseq-pipeline/06_run_assemble_atac_outputs.R \
