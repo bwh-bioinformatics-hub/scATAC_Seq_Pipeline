@@ -50,7 +50,7 @@ rmd_path <- file.path(args$out_dir,
                       paste0(args$in_sample,
                              "_scatac_seq_qc_report_generator.Rmd"))
 
-file.copy(system.file("rmarkdown/scatac_seq_qc_report_generator.Rmd", package = "scATAC_Seq_Pipeline"),
+file.copy(system.file("rmarkdown/scatac_seq_qc_report_generator.Rmd", package = "scATACSeqPipeline"),
           rmd_path,
           overwrite = TRUE)
 
