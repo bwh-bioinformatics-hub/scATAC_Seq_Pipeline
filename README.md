@@ -556,7 +556,6 @@ Rscript --vanilla \
   -o SampleID/atac_out/SampleID_out_report.html
 ```
 
-<a id="out_out"></a>
 
 ### Output files
 ```
