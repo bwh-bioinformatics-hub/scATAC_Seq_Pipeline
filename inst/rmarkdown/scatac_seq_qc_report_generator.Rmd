@@ -189,7 +189,7 @@ cat("## scATAC", sep = "\n")
 
 ```  
 
-```{r atac_child, child =  system.file("rmarkdown/scatac_seq_module.Rmd", package = "scATAC_Seq_Pipeline"), eval =  has_atac}
+```{r atac_child, child =  system.file("rmarkdown/scatac_seq_module.Rmd", package = "scATACSeqPipeline"), eval =  has_atac}
 
 ```   
 
