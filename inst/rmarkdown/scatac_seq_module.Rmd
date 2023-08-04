@@ -539,3 +539,12 @@ stm("10x ATAC QC Report complete.")
 [Return to Contents](#scatac_contents)  
 
 ---  
+scATAC report module `r {scatac_batch_module_version}`, Brigham and Women's Hospital
+
+```{r scatac_well_cleanup, include = FALSE}
+module_vars <- setdiff(ls(), orig_workspace)
+rm(list=module_vars)
+
+gc()
+
+```
