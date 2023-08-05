@@ -29,7 +29,7 @@ if(is.null(args$out_html)) {
 
 rmd_loc <- "00_arc_format.rmd"
 
-file.copy(system.file("rmarkdown/00_arc_format.rmd", package = "ATACSeqPipeline"),
+file.copy(system.file("rmarkdown/00_arc_format.rmd", package = "scATACSeqPipeline"),
           rmd_loc,
           overwrite = TRUE)
 
