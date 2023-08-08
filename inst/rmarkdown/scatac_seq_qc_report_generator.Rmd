@@ -1,5 +1,5 @@
 ---
-title: "scATAC Sequencing Batch Summary: `r {params$in_sample}`"
+title: "scATAC Sequencing Sample Summary: `r {params$in_sample}`"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
   html_document:
@@ -18,7 +18,7 @@ params:
 
 # {.tabset}  
 
-## Batch Summary {.active} 
+## Sample Summary {.active} 
 <!-- create details section to collapse multiple no-output code blocks to save space -->
 <details style="color: lightgray;"> 
   <summary>Expand Code</summary> 
@@ -48,9 +48,9 @@ quiet_library(cowplot)       # arranging multiple plots
 quiet_library(gt)            # formatted table output
 quiet_library(plotly)        # interactive plots
 quiet_library(tidyr)         # data wrangling
-quiet_library(Seurat)        # batch umap creation
-quiet_library(future)        # multi-threading for batch umap creation
-quiet_library(future.apply)  # multi-threading for batch umap creation
+quiet_library(Seurat)        # Sample umap creation
+quiet_library(future)        # multi-threading for Sample umap creation
+quiet_library(future.apply)  # multi-threading for Sample umap creation
 quiet_library(rio)
 quiet_library(purrr)
 quiet_library(scCustomize)
@@ -168,7 +168,7 @@ if(has_hto){
 
 </details> 
 
-### Batch Information    
+### Sample Information    
 
 ```{r batchinfo, include = TRUE}
 stm("Constructing Batch Information table")
