@@ -478,7 +478,7 @@ writeLines(qc_list_json,
 
 #### Session Information  
 
-```{r atac_Session_Info}
+```{r include = FALSE,atac_Session_Info}
 sessionInfo()
 ```
 
