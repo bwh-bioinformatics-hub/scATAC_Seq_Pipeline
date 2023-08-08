@@ -1,0 +1,46 @@
+<a id="scatac_summary"></a>
+
+```{r, include=FALSE} 
+orig_workspace <- ls()
+scatac_seq_sample_module_version <- "1.0.2" # 20211201
+stm("Starting scATAC Sample Module")
+```
+
+#### [Sample Summary](#sample_seq_summary)
+```{r}
+sum <- list.files(in_atac, 
+                         pattern = "summary.csv",
+                         full.names = TRUE)
+
+sum %>% filter(c(ATAC.Sequenced.read.pairs,ATAC.Valid.barcodes,ATAC.Q30.bases.in.barcode,ATAC.Q30.bases.in.read.1,
+                    ATAC.Q30.bases.in.read.2,ATAC.Q30.bases.in.sample.index.i1,ATAC.Percent.duplicates))
+
+
+col_to_keep <- names(sum) %in% c("ATAC.Sequenced.read.pairs","ATAC.Valid.barcodes","ATAC.Q30.bases.in.barcode","ATAC.Q30.bases.in.read.1",
+                                 "ATAC.Q30.bases.in.read.2","ATAC.Q30.bases.in.sample.index.i1","ATAC.Percent.duplicates")
+
+df <- sum[col_to_keep]
+
+labels <- c("Sequenced Read Pairs","Valid Barcodes","Q30 Bases in Barcode","Q30 Bases in Read 1",
+            "Q30 Bases in Read 2","Q30 Bases in Sample Index i1","Percent Duplicates")
+values <- c(df$ATAC.Sequenced.read.pairs,df$ATAC.Valid.barcodes,df$ATAC.Q30.bases.in.barcode,df$ATAC.Q30.bases.in.read.1,df$ATAC.Q30.bases.in.read.2,
+            df$ATAC.Q30.bases.in.sample.index.i1,df$ATAC.Percent.duplicates)
+
+
+
+
+simple_html_table(labels, values, fontsize = 3, col_widths_px = c(175, 850))
+```
+
+[Return to Contents](#sample_seq_summary)  
+
+---  
+scATAC report module `r {scatac_summary_module_version}`, Brigham and Women's Hospital
+
+```{r scatac_cleanup, include = FALSE}
+module_vars <- setdiff(ls(), orig_workspace)
+rm(list=module_vars)
+
+gc()
+
+```
