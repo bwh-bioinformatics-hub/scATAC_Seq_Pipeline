@@ -19,10 +19,6 @@ scatac_batch_module_version <- "1.0.2" #2021201
   - [Mito. Fragments](#atac_fragment_stats_mito)  
   - [FRIP](#atac_fragment_stats_frip)  
   - [FRITSS](#atac_fragment_stats_fritss)  
-  - [Fraction in ENCODE/Altius Index](#atac_fragment_stats_fralt)  
-- [Saturation Metrics](#atac_saturation_stats)  
-- [Fragment Widths](#atac_width_stats)  
-
 Barcode rank plot: The barcode rank plot shows the distribution of non-duplicate reads and which barcodes were inferred to be associated with cells. A steep drop-off ('knee') is indicative of good separation between the cell-associated barcodes and the barcodes associated with empty partitions.
 
 Insertion size: ATAC-seq requires a proper pair of Tn5 transposase cutting events at the ends of DNA. In the nucleosome-free open chromatin regions, many molecules of Tn5 can kick in and chop the DNA into small pieces; around nucleosome-occupied regions, and Tn5 can only access the linker regions. Therefore, in a good ATAC-seq library, you should expect to see a sharp peak at the <100 bp region (open chromatin), and a peak at ~200bp region (mono-nucleosome), and other larger peaks (multi-nucleosomes). A clear nucleosome pattern indicates a good quality of the experiment.
@@ -47,7 +43,7 @@ Duplication rate: A fragment is considered “usable” if it uniquely maps to t
 ##### Session Preparation  
   
 ###### Load libraries: 
-```{r Load Libraries}
+```{r include = FALSE}
 start_time_atac <- Sys.time()
 
 quiet_library <- function(...) {
@@ -63,12 +59,12 @@ options(stringsAsFactors = FALSE)
 ```
 
 Declaring start
-```{r Declare start}
+```{r include = FALSE}
 stm("Starting scATAC Batch Report module")
 ```
 
 ###### Input Parameters  
-```{r Print Arguments}
+```{r include = FALSE}
 print(c(
   paste0("IN  results dir      : ", in_atac),
   paste0("IN  BatchID          : ", in_sample),
@@ -77,7 +73,7 @@ print(c(
 ```
 
 ###### Check Input Files  
-```{r Check Inputs}
+```{r include = FALSE}
 if(!dir.exists(in_atac)) {
   stm(paste("ERROR: Cannot find IN results dir:", in_atac))
   stop()
@@ -92,7 +88,7 @@ out_prefix <- file.path(out_dir, paste0(in_sample, "_"))
 ###### Check available files
 
 Unfiltered metadata
-```{r}
+```{r include = FALSE} 
 meta_files <- list.files(in_atac, 
                          pattern = "_all_metadata.csv.gz$",
                          full.names = TRUE)
@@ -136,7 +132,7 @@ filt_meta_list <- filt_meta_list[sample_names]
 ```
 
 Plot Settings
-```{r}
+```{r include = FALSE}
 n_grid_columns <- min(length(filt_meta_list),2)
 n_grid_rows <- ceiling(length(filt_meta_list)/2)
 
@@ -145,7 +141,7 @@ grid_height <- n_grid_rows * 2
 ```
 
 Saturation projections
-```{r}
+```{r include = FALSE}
 sat_files <- list.files(in_atac,
                         pattern = "_saturation_projection.csv.gz$",
                         full.names = TRUE)
@@ -169,7 +165,7 @@ sat_list <- map(sat_files, fread)
 ```
 
 Fragment widths
-```{r}
+```{r include = FALSE}
 width_files <- list.files(in_atac,
                           pattern = "_fragment_width_summary.csv.gz",
                           full.names = TRUE)
@@ -205,7 +201,7 @@ width_list <- map(width_files, fread)
 <!-- Start collapsed 'combine metadata' section -->
 <!-- <details style="color: lightgray;">   -->
 <!--   <summary>Expand metadata prep code</summary>    -->
-```{r}
+```{r include = FALSE}
 filtered_meta <- do.call(rbind, filt_meta_list)
 meta <- do.call(rbind, meta_list)
 
@@ -226,7 +222,7 @@ meta$mito_frac <- meta$n_mito / meta$n_fragments
 ```
 
 ###### Filter metadata based on cutoffs  
-```{r}
+```{r include = FALSE}
 stm("Filtering based on QC cutoffs")
 
 meta <- meta %>%
@@ -243,7 +239,7 @@ for(i in seq_along(cutoffs)) {
 ```
 
 Set up global metadata for reporting
-```{r}
+```{r include = FALSE}
 meta$barcode_category <- "fail_qc"
 meta$barcode_category[!meta$filtered & meta$pass_fail == "pass"] <- "pass_doublet"
 meta$barcode_category[meta$filtered & meta$pass_fail == "pass"] <- "pass_singlet"
@@ -257,7 +253,7 @@ meta$barcode_category[meta$filtered & meta$pass_fail == "pass"] <- "pass_singlet
 <a id="atac_qc_stats"></a>  
 
 #### QC Stats  
-```{r}
+```{r include = FALSE}
 qc_list <- list(report_type = "atac_qc",
                 report_datetime = as.character(start_time_atac),
                 report_uuid = ids::uuid(use_time = TRUE),
@@ -272,7 +268,7 @@ out_json <- paste0(out_prefix, "atac_qc_metrics.json")
 <a id="atac_barcode_stats"></a>  
   
 ##### Barcode QC Stats  
-```{r}
+```{r include = FALSE}
 barcode_counts <- meta[,.(n_barcodes = nrow(.SD),
                             n_pass_qc = sum(.SD$pass_fail == "pass"),
                             n_fail_qc = sum(.SD$pass_fail == "fail"),
@@ -287,7 +283,7 @@ qc_list$barcode_stats <- as.list(barcode_counts)
 qc_table(barcode_counts)
 ```  
   
-```{r}
+```{r include = FALSE}
 qc_stacked_barplot(meta,
                    category_x = "sample_id",
                    name_x = "Sample ID",
@@ -296,7 +292,7 @@ qc_stacked_barplot(meta,
                    as_fraction = TRUE)
 ```
 
-```{r}
+```{r include = FALSE}
 qc_aligned_barplot(meta,
                    category_x = "sample_id",
                    name_x = "Sample ID",
@@ -304,7 +300,7 @@ qc_aligned_barplot(meta,
                    category_name = "Barcode Category")
 ```
 
-```{r}
+```{r include = FALSE}
 qc_violin_plot(filtered_meta,
                                      category_x = "sample_id",
                                      name_x = "Sample ID",
@@ -314,7 +310,7 @@ qc_violin_plot(filtered_meta,
                                      fill = "dodgerblue")
 ```
 
-```{r}
+```{r include = FALSE}
 qc_violin_plot(filtered_meta,
                                      category_x = "sample_id",
                                      name_x = "Sample ID",
@@ -324,7 +320,7 @@ qc_violin_plot(filtered_meta,
                                      fill = "dodgerblue")
 ```
 
-```{r}
+```{r include = FALSE}
 qc_violin_plot(filtered_meta,
                                      category_x = "sample_id",
                                      name_x = "Sample ID",
@@ -339,7 +335,7 @@ qc_violin_plot(filtered_meta,
 <a id="atac_fragment_stats_unique"></a>
 
 ##### Unique Fragments per Cell
-```{r}
+```{r include = FALSE}
 category_reads_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
@@ -366,7 +362,7 @@ plot_grid(plotlist = reads_violin_list,
 <a id="atac_fragment_stats_mito"></a>
 
 ##### Fraction of Raw Reads in Mitochondria per Cell
-```{r}
+```{r include = FALSE}
 category_mito_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
@@ -395,7 +391,7 @@ plot_grid(plotlist = mito_violin_list,
 <a id="atac_fragment_stats_frip"></a>
 
 ##### Fraction of Reads in Peaks per Cell
-```{r}
+```{r include = FALSE}
 category_frip_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
@@ -420,7 +416,7 @@ plot_grid(plotlist = frip_violin_list,
 ```
 
 ##### Reads vs peaks_frac scatter
-```{r fig.width=grid_width, fig.height=grid_height}
+```{r include = FALSE, fig.width=grid_width, fig.height=grid_height}
 sample_id_filtered_meta_list <- split(filtered_meta, filtered_meta$sample_id)
 qc_scatter_list <- map(sample_id_filtered_meta_list,
                        function(sample_meta) {
@@ -446,7 +442,7 @@ plot_grid(plotlist = qc_scatter_list,
 <a id="atac_fragment_stats_fritss"></a>
 
 ##### Fraction of Reads in TSS (+/- 2kb) per Cell
-```{r}
+```{r include = FALSE}
 category_fritss_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
@@ -470,40 +466,12 @@ plot_grid(plotlist = fritss_violin_list,
           nrow = 1, align = "h")
 ```
 
-##### Reads vs tss_frac scatter
-```{r fig.width=grid_width, fig.height=grid_height}
-qc_scatter_list <- map(sample_id_filtered_meta_list,
-                       function(sample_meta) {
-                         qc_scatter_plot(sample_meta,
-                                         column_x = "n_unique",
-                                         name_x = "N Unique Fragments per Cell",
-                                         column_y = "tss_frac",
-                                         name_y = "Frac Fragments in TSS (tss_frac)",
-                                         log_x = TRUE, log_y = FALSE, frac_y = TRUE,
-                                         show_targets = FALSE,
-                                         color = "mediumorchid3") +
-                           geom_vline(aes(xintercept = 2.5e3), linetype = "dashed", size = 0.2) +
-                           geom_hline(aes(yintercept = cutoffs$tss_frac), linetype = "dashed", size = 0.2) +
-                           ggtitle(sample_meta$sample_id[1])
-                       })
-
-plot_grid(plotlist = qc_scatter_list,
-          ncol = n_grid_columns,
-          nrow = n_grid_rows)
-```
 [Return to Contents](#scatac_contents)
 
-<a id="atac_width_stats"></a>
-
-
-
-[Return to Contents](#scatac_contents)
 
 <a id="atac_json_out"></a>
 
-#### Write QC JSON
-
-```{r atac_Save_QC_JSON}
+```{r include = FALSE}
 stm(paste0("Writing JSON to ",out_json))
 
 qc_list_json <- jsonlite::toJSON(qc_list,
@@ -525,7 +493,7 @@ sessionInfo()
 ```
 
 Total time elapsed
-```{r atac_Show_Time}
+```{r include = FALSE}
 end_time <- Sys.time()
 diff_time <- end_time - start_time_atac
 time_message <- paste0("Elapsed Time: ", 
