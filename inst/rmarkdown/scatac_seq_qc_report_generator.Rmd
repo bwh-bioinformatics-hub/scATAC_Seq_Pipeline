@@ -180,10 +180,6 @@ sum <- list.files(in_atac,
                          pattern = "summary.csv",
                          full.names = TRUE)
 
-sum %>% filter(c(ATAC.Sequenced.read.pairs,ATAC.Valid.barcodes,ATAC.Q30.bases.in.barcode,ATAC.Q30.bases.in.read.1,
-                    ATAC.Q30.bases.in.read.2,ATAC.Q30.bases.in.sample.index.i1,ATAC.Percent.duplicates))
-
-
 col_to_keep <- names(sum) %in% c("ATAC.Sequenced.read.pairs","ATAC.Valid.barcodes","ATAC.Q30.bases.in.barcode","ATAC.Q30.bases.in.read.1",
                                  "ATAC.Q30.bases.in.read.2","ATAC.Q30.bases.in.sample.index.i1","ATAC.Percent.duplicates")
 
