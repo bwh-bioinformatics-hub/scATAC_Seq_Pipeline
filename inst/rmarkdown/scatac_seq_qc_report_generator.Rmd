@@ -185,6 +185,7 @@ cat("##Sample Summary,sep = "\n")
 ```
 
 ```{r sample_child = system.file("rmarkdown/scatac_sample_summary_module.Rmd", package = "scATACSeqPipeline"), eval =  has_atac}
+```
 ```{r atac_tab, results = "asis", eval = has_atac, echo = FALSE}
 cat("## scATAC", sep = "\n")
 
