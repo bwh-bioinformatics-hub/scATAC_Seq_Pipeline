@@ -99,7 +99,7 @@ names(meta_list) <- sample_names
 ```
 
 Filtered metadata
-```{r}
+```{r include = FALSE}
 filt_meta_files <- list.files(in_atac, 
                          pattern = "_filtered_metadata.csv.gz$",
                          full.names = TRUE)
@@ -122,7 +122,7 @@ filt_meta_list <- filt_meta_list[sample_names]
 ```
 
 Plot Settings
-```{r include = FALSE}
+```{r }
 n_grid_columns <- min(length(filt_meta_list),2)
 n_grid_rows <- ceiling(length(filt_meta_list)/2)
 
@@ -258,7 +258,7 @@ out_json <- paste0(out_prefix, "atac_qc_metrics.json")
 <a id="atac_barcode_stats"></a>  
   
 ##### Barcode QC Stats  
-```{r include = FALSE}
+```{r }
 barcode_counts <- meta[,.(n_barcodes = nrow(.SD),
                             n_pass_qc = sum(.SD$pass_fail == "pass"),
                             n_fail_qc = sum(.SD$pass_fail == "fail"),
@@ -273,7 +273,7 @@ qc_list$barcode_stats <- as.list(barcode_counts)
 qc_table(barcode_counts)
 ```  
   
-```{r include = FALSE}
+```{r }
 qc_stacked_barplot(meta,
                    category_x = "sample_id",
                    name_x = "Sample ID",
@@ -282,7 +282,7 @@ qc_stacked_barplot(meta,
                    as_fraction = TRUE)
 ```
 
-```{r include = FALSE}
+```{r }
 qc_aligned_barplot(meta,
                    category_x = "sample_id",
                    name_x = "Sample ID",
@@ -290,7 +290,7 @@ qc_aligned_barplot(meta,
                    category_name = "Barcode Category")
 ```
 
-```{r include = FALSE}
+```{r }
 qc_violin_plot(filtered_meta,
                                      category_x = "sample_id",
                                      name_x = "Sample ID",
@@ -300,7 +300,7 @@ qc_violin_plot(filtered_meta,
                                      fill = "dodgerblue")
 ```
 
-```{r include = FALSE}
+```{r }
 qc_violin_plot(filtered_meta,
                                      category_x = "sample_id",
                                      name_x = "Sample ID",
@@ -310,7 +310,7 @@ qc_violin_plot(filtered_meta,
                                      fill = "dodgerblue")
 ```
 
-```{r include = FALSE}
+```{r }
 qc_violin_plot(filtered_meta,
                                      category_x = "sample_id",
                                      name_x = "Sample ID",
@@ -325,7 +325,7 @@ qc_violin_plot(filtered_meta,
 <a id="atac_fragment_stats_unique"></a>
 
 ##### Unique Fragments per Cell
-```{r include = FALSE}
+```{r }
 category_reads_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
@@ -352,7 +352,7 @@ plot_grid(plotlist = reads_violin_list,
 <a id="atac_fragment_stats_mito"></a>
 
 ##### Fraction of Raw Reads in Mitochondria per Cell
-```{r include = FALSE}
+```{r }
 category_mito_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
@@ -381,7 +381,7 @@ plot_grid(plotlist = mito_violin_list,
 <a id="atac_fragment_stats_frip"></a>
 
 ##### Fraction of Reads in Peaks per Cell
-```{r include = FALSE}
+```{r }
 category_frip_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
@@ -406,7 +406,7 @@ plot_grid(plotlist = frip_violin_list,
 ```
 
 ##### Reads vs peaks_frac scatter
-```{r include = FALSE, fig.width=grid_width, fig.height=grid_height}
+```{r fig.width=grid_width, fig.height=grid_height}
 sample_id_filtered_meta_list <- split(filtered_meta, filtered_meta$sample_id)
 qc_scatter_list <- map(sample_id_filtered_meta_list,
                        function(sample_meta) {
@@ -432,7 +432,7 @@ plot_grid(plotlist = qc_scatter_list,
 <a id="atac_fragment_stats_fritss"></a>
 
 ##### Fraction of Reads in TSS (+/- 2kb) per Cell
-```{r include = FALSE}
+```{r }
 category_fritss_violins <- qc_violin_plot(meta,
                                          category_x = "barcode_category",
                                          name_x = "Barcode Type",
