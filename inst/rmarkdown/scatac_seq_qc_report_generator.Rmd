@@ -175,12 +175,27 @@ n_samples <- length(samples)
 labels <- c("N Samples")
 values <-  c(n_samples)
 simple_html_table(labels, values, fontsize = 3, col_widths_px = c(175, 850))
+
+sum <- list.files(in_atac, 
+                         pattern = "summary.csv",
+                         full.names = TRUE)
+
+sum %>% filter(c(ATAC.Sequenced.read.pairs,ATAC.Valid.barcodes,ATAC.Q30.bases.in.barcode,ATAC.Q30.bases.in.read.1,
+                    ATAC.Q30.bases.in.read.2,ATAC.Q30.bases.in.sample.index.i1,ATAC.Percent.duplicates))
+
+
+col_to_keep <- names(sum) %in% c("ATAC.Sequenced.read.pairs","ATAC.Valid.barcodes","ATAC.Q30.bases.in.barcode","ATAC.Q30.bases.in.read.1",
+                                 "ATAC.Q30.bases.in.read.2","ATAC.Q30.bases.in.sample.index.i1","ATAC.Percent.duplicates")
+
+df <- sum[col_to_keep]
+
+Labels <- c("Sequenced Read Pairs","Valid Barcodes","Q30 Bases in Barcode","Q30 Bases in Read 1",
+            "Q30 Bases in Read 2","Q30 Bases in Sample Index i1","Percent Duplicates")
+Values <- c(df$ATAC.Sequenced.read.pairs,df$ATAC.Valid.barcodes,df$ATAC.Q30.bases.in.barcode,df$ATAC.Q30.bases.in.read.1,df$ATAC.Q30.bases.in.read.2,
+            df$ATAC.Q30.bases.in.sample.index.i1,df$ATAC.Percent.duplicates)
+
+simple_html_table(Labels, Values, fontsize = 3, col_widths_px = c(175, 850))
 ```  
-```{r sample_tab, results = "asis",eval = has_atac, echo = FALSE}
-cat("## Sample Summary", sep = "\n")
-```
-```{r sample_child = system.file("rmarkdown/scatac_sample_summary_module.Rmd", package = "scATACSeqPipeline"), eval =  has_atac}
-```
 ```{r atac_tab, results = "asis", eval = has_atac, echo = FALSE}
 cat("## scATAC", sep = "\n")
 ```  
