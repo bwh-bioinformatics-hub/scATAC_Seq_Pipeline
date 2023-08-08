@@ -181,7 +181,7 @@ simple_html_table(labels, values, fontsize = 3, col_widths_px = c(175, 850))
 
 ```  
 ```{r sample_tab, results = "asis",eval = has_atac, echo = FALSE}
-cat("##Sample Summary,sep = "\n")
+cat("##Sample Summary", sep = "\n")
 ```
 
 ```{r sample_child = system.file("rmarkdown/scatac_sample_summary_module.Rmd", package = "scATACSeqPipeline"), eval =  has_atac}
