@@ -188,7 +188,7 @@ df <- sum[col_to_keep]
 Labels <- c("Sequenced Read Pairs","Valid Barcodes","Q30 Bases in Barcode","Q30 Bases in Read 1",
             "Q30 Bases in Read 2","Q30 Bases in Sample Index i1","Percent Duplicates")
 Values <- c(df$ATAC.Sequenced.read.pairs,df$ATAC.Valid.barcodes,df$ATAC.Q30.bases.in.barcode,df$ATAC.Q30.bases.in.read.1,df$ATAC.Q30.bases.in.read.2,
-            df$ATAC.Q30.bases.in.sample.index.i1,df$ATAC.Percent.duplicates)
+            df$ATAC.Q30.bases.in.read.2,df$ATAC.Q30.bases.in.sample.index.i1,df$ATAC.Percent.duplicates)
 
 simple_html_table(Labels, Values, fontsize = 3, col_widths_px = c(175, 850))
 ```  
