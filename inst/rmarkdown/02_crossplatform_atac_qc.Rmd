@@ -426,8 +426,6 @@ stm(paste0("Reading SampleSheet from ", in_key))
 
 samplesheet <- read.csv(in_key)
 
-in_sample <- as.character(samplesheet$sample_id)
-
 stm(paste0("SampleSheet SampleID: ", in_sample))
 
 out_prefix <- file.path(out_dir, paste0(in_sample, "_"))
