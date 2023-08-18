@@ -537,13 +537,14 @@ valid_barcodes <- list(bcs = filtered_meta$original_barcodes)
 names(valid_barcodes) <- in_sample
 valid_barcodes <- SimpleList(valid_barcodes)
 
-ArrowFile <- createArrowFiles(inputFiles = in_frag,
-                              sampleNames = in_sample,
-                              validBarcodes = valid_barcodes,
-                              filterFrags = 500,
-                              filterTSS = 0,
-                              maxFrags = 1e6,
-                              force = TRUE)
+ArrowFile <- createArrowFiles(
+              inputFiles = fragFiles,
+              sampleNames = names(fragFiles),
+              QCDir = "QualityControl",
+              minTSS = 4, #Dont set this too high because you can always increase later
+              minFrags = 1000,
+              addTileMat = TRUE,
+              addGeneScoreMat = TRUE)
 
 stm(paste0("ArchR: ArrowFile generated at ", ArrowFile))
 
