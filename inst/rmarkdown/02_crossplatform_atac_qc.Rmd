@@ -538,8 +538,8 @@ names(valid_barcodes) <- in_sample
 valid_barcodes <- SimpleList(valid_barcodes)
 
 ArrowFile <- createArrowFiles(
-              inputFiles = fragFiles,
-              sampleNames = names(fragFiles),
+              inputFiles = in_frag,
+              sampleNames = names(in_frag),
               QCDir = "QualityControl",
               minTSS = 4, #Dont set this too high because you can always increase later
               minFrags = 1000,
